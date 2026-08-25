@@ -1,4 +1,4 @@
-name: Build SyringeEx
+name: Build SyringeEx to GitHub Release
 on:
   push:
     branches: [ main, master ]
@@ -13,20 +13,27 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Remove /Gm flag inside vcxproj
+      - name: Find MSBuild
+        id: find_msbuild
         run: |
-          $projFile = "Debugger.vcxproj"
-          $content = Get-Content $projFile -Raw
-          $content = $content -replace '\s*/Gm',''
-          Set-Content $projFile $content
+          $path = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe"
+          echo "msbuild_path=$path" >> $env:GITHUB_OUTPUT
 
-      - name: Locate & run MSBuild
+      - name: Run MSBuild, wipe AdditionalOptions避免/Gm冲突
         run: |
-          $msbuildPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe"
-          & $msbuildPath Syringe.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v143
+          $msbuild = ${{ steps.find_msbuild.outputs.msbuild_path }}
+          & $msbuild Syringe.sln `
+            /p:Configuration=Release `
+            /p:Platform=Win32 `
+            /p:PlatformToolset=v143 `
+            /p:AdditionalOptions=""
 
-      - name: Upload compiled exe
-        uses: actions/upload-artifact@v4
+      - name: Create Release & upload raw exe
+        uses: softprops/action-gh-release@v2
         with:
-          name: SyringeEx‑Build
-          path: Release/Syringe.exe
+          tag_name: auto-build
+          name: Auto Build Artifact
+          files: |
+            Syringe/Release/Syringe.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
