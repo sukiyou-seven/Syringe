@@ -13,10 +13,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Locate & run MSBuild, override toolset to v143
+      - name: Locate & run MSBuild, fix toolset & disable /Gm
         run: |
           $msbuildPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe"
-          & $msbuildPath Syringe.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v143
+          & $msbuildPath Syringe.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v143 /p:EnableMinimalRebuild=false
 
       - name: Upload compiled exe
         uses: actions/upload-artifact@v4
