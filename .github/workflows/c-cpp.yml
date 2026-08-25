@@ -13,14 +13,25 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Delete AdditionalOptions node in vcxproj
+        run: |
+          $projPath = "Syringe/Debugger.vcxproj"
+          [xml]$xml = Get-Content $projPath
+          $ns = New-Object System.Xml.XmlNamespaceManager($xml.NameTable)
+          $ns.AddNamespace("msbuild", "http://schemas.microsoft.com/developer/msbuild/2003")
+          $nodes = $xml.SelectNodes("//msbuild:ItemDefinitionGroup//msbuild:ClCompile//msbuild:AdditionalOptions", $ns)
+          foreach($n in $nodes){
+            $n.ParentNode.RemoveChild($n)
+          }
+          $xml.Save($projPath)
+
       - name: Build Solution
         run: |
           $msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe"
           & "$msbuild" Syringe.sln `
             /p:Configuration=Release `
             /p:Platform=Win32 `
-            /p:PlatformToolset=v143 `
-            /p:AdditionalOptions=""
+            /p:PlatformToolset=v143
 
       - name: Upload exe to Github Release
         uses: softprops/action-gh-release@v2
