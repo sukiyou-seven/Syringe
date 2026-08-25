@@ -8,11 +8,15 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Checkout source code
+      - name: Checkout source with submodules
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: Build Release Win32 (32位，YR必须x86)
-        run: msbuild Syringe.sln /p:Configuration=Release /p:Platform=Win32
+      - name: Locate & run MSBuild
+        run: |
+          $msbuildPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe"
+          & $msbuildPath Syringe.sln /p:Configuration=Release /p:Platform=Win32
 
       - name: Upload compiled exe
         uses: actions/upload-artifact@v4
