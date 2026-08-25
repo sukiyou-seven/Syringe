@@ -13,27 +13,22 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Find MSBuild
-        id: find_msbuild
+      - name: Build Solution
         run: |
-          $path = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe"
-          echo "msbuild_path=$path" >> $env:GITHUB_OUTPUT
-
-      - name: Run MSBuild, wipe AdditionalOptions避免/Gm冲突
-        run: |
-          $msbuild = ${{ steps.find_msbuild.outputs.msbuild_path }}
-          & $msbuild Syringe.sln `
+          $msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe"
+          & "$msbuild" Syringe.sln `
             /p:Configuration=Release `
             /p:Platform=Win32 `
             /p:PlatformToolset=v143 `
             /p:AdditionalOptions=""
 
-      - name: Create Release & upload raw exe
+      - name: Upload exe to Github Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: auto-build
-          name: Auto Build Artifact
+          name: Auto‑Build SyringeEx
           files: |
             Syringe/Release/Syringe.exe
+          overwrite: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
