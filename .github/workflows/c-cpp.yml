@@ -11,14 +11,11 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Install MSBuild environment
-        uses: ilammy/msbuild-action@v2
-
-      - name: Compile Release Win32 (32位，YR必须x86)
+      - name: Build Release Win32 (32位，YR必须x86)
         run: msbuild Syringe.sln /p:Configuration=Release /p:Platform=Win32
 
-      - name: Export compiled Syringe.exe
+      - name: Upload compiled exe
         uses: actions/upload-artifact@v4
         with:
-          name: SyringeEx-Build
+          name: SyringeEx‑Build
           path: Release/Syringe.exe
