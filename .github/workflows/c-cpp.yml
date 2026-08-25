@@ -13,10 +13,17 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Locate & run MSBuild, fix toolset & disable /Gm
+      - name: Remove /Gm flag inside vcxproj
+        run: |
+          $projFile = "Debugger.vcxproj"
+          $content = Get-Content $projFile -Raw
+          $content = $content -replace '\s*/Gm',''
+          Set-Content $projFile $content
+
+      - name: Locate & run MSBuild
         run: |
           $msbuildPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe"
-          & $msbuildPath Syringe.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v143 /p:EnableMinimalRebuild=false
+          & $msbuildPath Syringe.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v143
 
       - name: Upload compiled exe
         uses: actions/upload-artifact@v4
